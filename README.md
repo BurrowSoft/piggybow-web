@@ -59,6 +59,10 @@ that marker.
 Turning a condition on is its own small change, made once what it describes is true. The tests pin the
 current values.
 
+**Effective dates.** `policyVersions` in `site.config.json` holds each legal page's effective date as
+`YYYY-MM-DD`: the same string the app records as the policy version, so change both together. The page
+shows it in US English ("November 29, 2026"). A legal page can't go live without a real date.
+
 ## Languages
 
 English is at `/`. More languages will follow the app's own, each at `/<locale>/`, with the same keys in

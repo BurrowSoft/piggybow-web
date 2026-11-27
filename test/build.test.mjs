@@ -7,8 +7,10 @@ import { after, describe, test } from 'node:test';
 import {
   assertSafeOutDir,
   build,
+  effectiveDateHtml,
   escapeHtml,
   fillTokens,
+  ISO_DATE,
   modeFromEnv,
   RAW_SLOTS,
   render,
@@ -279,6 +281,52 @@ describe('text', () => {
     const leaves = (obj, prefix = '') =>
       Object.entries(obj).flatMap(([k, v]) => (typeof v === 'string' ? [prefix + k] : leaves(v, `${prefix}${k}.`)));
     for (const key of leaves(messages)) assert.ok(used.has(key), `${key} is never used`);
+  });
+});
+
+describe('legal pages', () => {
+  test('the effective date shows in US English and keeps the exact version string', () => {
+    assert.equal(effectiveDateHtml('2026-11-29'), '<time datetime="2026-11-29">November 29, 2026</time>');
+    assert.throws(() => effectiveDateHtml('2026-02-30'), /not a real date/);
+    assert.throws(() => effectiveDateHtml(undefined), /no policy version/);
+    assert.equal(effectiveDateHtml('[DRAFT] <later>'), '[DRAFT] &lt;later&gt;');
+  });
+
+  test('a production build accepts only a real effective date', () => {
+    const production = { production: true, where: 'privacy.html' };
+    assert.equal(effectiveDateHtml('2026-11-29', production), '<time datetime="2026-11-29">November 29, 2026</time>');
+    for (const bad of ['[DRAFT] later', '2026/11/29', '', 'November 29, 2026']) {
+      assert.throws(() => effectiveDateHtml(bad, production), /production needs a real effective date/, JSON.stringify(bad));
+    }
+    assert.throws(() => effectiveDateHtml('2026-02-30', production), /not a real date/);
+  });
+
+  test('a policy version is a real date, or a [DRAFT] note while the page is gated off', () => {
+    for (const page of config.pages.filter((p) => p.policy)) {
+      const version = config.policyVersions[page.policy];
+      assert.ok(ISO_DATE.test(version) || version.startsWith('[DRAFT]'), `${page.policy}: ${version}`);
+      if (config.conditions[page.gate]?.met === true) {
+        assert.match(version, ISO_DATE, `${page.slug} is live, so it needs its effective date`);
+      }
+    }
+  });
+
+  test('the privacy policy has the outline\'s nine sections, in order', async () => {
+    const { outDir } = await buildTo('preview', messages);
+    const html = await readFile(path.join(outDir, 'privacy.html'), 'utf8');
+    const ids = [...html.matchAll(/<section id="([\w-]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(ids, [
+      'who-we-are',
+      'what-the-app-stores',
+      'what-leaves-your-phone',
+      'no-ads-or-tracking',
+      'children',
+      'your-choices',
+      'changes',
+      'contact',
+      'effective-date',
+    ]);
+    assert.ok(html.includes(`<a href="mailto:${config.supportEmail}">`), 'the contact section links the support address');
   });
 });
 

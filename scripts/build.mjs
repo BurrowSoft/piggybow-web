@@ -13,7 +13,29 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** Slots the build fills with its own HTML. Templates may use {{{slot}}} only for these. */
-export const RAW_SLOTS = Object.freeze(['banner', 'canonicalTag', 'content', 'footerLinks', 'header']);
+export const RAW_SLOTS = Object.freeze(['banner', 'canonicalTag', 'content', 'effectiveDate', 'footerLinks', 'header']);
+
+export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * A legal page's effective date. The config holds it as YYYY-MM-DD, the same string the app
+ * records as the policy version; the page shows it in US English ("November 29, 2026").
+ * Until it is set, the config holds a "[DRAFT] …" note, shown as is in previews. A production
+ * build accepts only a real date: the build alone can't publish anything else.
+ */
+export function effectiveDateHtml(value, { production = false, where = 'policy' } = {}) {
+  if (typeof value !== 'string') throw new Error(`${where}: no policy version`);
+  if (!ISO_DATE.test(value)) {
+    if (production) throw new Error(`${where}: production needs a real effective date (YYYY-MM-DD), not "${value}"`);
+    return escapeHtml(value);
+  }
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+    throw new Error(`not a real date: ${value}`);
+  }
+  const shown = new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeZone: 'UTC' }).format(date);
+  return `<time datetime="${value}">${escapeHtml(shown)}</time>`;
+}
 
 export function modeFromEnv(env = process.env) {
   if (env.SHOW_DRAFTS === '1') return 'preview';
@@ -174,7 +196,19 @@ export async function build({
         canonicalTag: `<link rel="canonical" href="${escapeHtml(config.siteUrl + href(page.slug))}">`,
         banner: page.draft ? `<p class="draft-banner" role="note">${escapeHtml(text('draftBanner', page.fragment))}</p>` : '',
         header: header(page.slug),
-        content: draw(fragment, base, page.fragment),
+        content: draw(
+          fragment,
+          base,
+          page.fragment,
+          page.policy
+            ? {
+                effectiveDate: effectiveDateHtml(config.policyVersions?.[page.policy], {
+                  production: mode === 'production',
+                  where: page.fragment,
+                }),
+              }
+            : {},
+        ),
         footerLinks,
       },
     );

@@ -47,7 +47,8 @@
   },
   "privacy": {
     "title": "[DRAFT] Privacy policy title",
-    "description": "[DRAFT] Privacy policy description"
+    "description": "[DRAFT] Privacy policy description",
+    "contact": "[DRAFT] Write to us at {supportEmail}."
   },
   "terms": {
     "title": "[DRAFT] Terms of use title",

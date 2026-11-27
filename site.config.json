@@ -5,9 +5,12 @@
   "pages": [
     { "slug": "", "fragment": "index.html", "messages": "home" },
     { "slug": "support", "fragment": "support.html", "messages": "support", "footer": true, "gate": "support-mailbox-live" },
-    { "slug": "privacy", "fragment": "privacy.html", "messages": "privacy", "footer": true, "gate": "privacy-text-approved" },
+    { "slug": "privacy", "fragment": "privacy.html", "messages": "privacy", "footer": true, "gate": "privacy-text-approved", "policy": "privacy" },
     { "slug": "terms", "fragment": "terms.html", "messages": "terms", "footer": true, "gate": "terms-text-approved" }
   ],
+  "policyVersions": {
+    "privacy": "[DRAFT] Effective date, set when the text is approved. It must equal the version the app records."
+  },
   "conditions": {
     "support-mailbox-live": {
       "met": false,
