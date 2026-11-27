@@ -4,7 +4,16 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, describe, test } from 'node:test';
 
-import { build, escapeHtml, fillTokens, modeFromEnv, RAW_SLOTS, render, ROOT } from '../scripts/build.mjs';
+import {
+  assertSafeOutDir,
+  build,
+  escapeHtml,
+  fillTokens,
+  modeFromEnv,
+  RAW_SLOTS,
+  render,
+  ROOT,
+} from '../scripts/build.mjs';
 
 const readJson = async (rel) => JSON.parse(await readFile(path.join(ROOT, rel), 'utf8'));
 const config = await readJson('site.config.json');
@@ -244,6 +253,14 @@ describe('text', () => {
     assert.throws(() => render('{{{home.lead}}}', messages, 'test'), /not a build slot/);
   });
 
+  test('raw slots come only from the build\'s own map, never from the copy', () => {
+    const copyWithSlotNames = { content: '<script>x</script>', header: '<b>' };
+    assert.throws(() => render('{{{content}}}', copyWithSlotNames, 'test'), /no slot \{\{\{content\}\}\}/);
+    assert.equal(render('{{{content}}}', copyWithSlotNames, 'test', undefined, {}, { content: '<p>ok</p>' }), '<p>ok</p>');
+    // As text, a copy key with a slot's name is still just escaped text.
+    assert.equal(render('{{header}}', copyWithSlotNames, 'test'), '&lt;b&gt;');
+  });
+
   test('templates and pages use raw slots only for the build slots', async () => {
     const dirs = ['src/templates', 'src/pages'];
     for (const dir of dirs) {
@@ -286,6 +303,26 @@ describe('config', () => {
   test('the app links to these paths: /privacy, /terms, /support stay where they are', () => {
     const slugs = config.pages.map((page) => page.slug);
     for (const slug of ['', 'privacy', 'terms', 'support']) assert.ok(slugs.includes(slug), `/${slug}`);
+  });
+
+  test('the output folder can never be the repo, a folder that holds it, or a drive root', () => {
+    const repo = ROOT;
+    const refused = [repo, path.dirname(repo), path.dirname(path.dirname(repo)), path.parse(repo).root, path.join(repo, 'x')];
+    if (process.platform === 'win32') refused.push(repo.toUpperCase(), path.dirname(repo).toLowerCase());
+    for (const dir of refused) assert.throws(() => assertSafeOutDir(repo, dir), /refusing to clear/, dir);
+    assert.equal(assertSafeOutDir(repo, path.join(repo, 'dist')), path.join(repo, 'dist'));
+    const elsewhere = path.join(tmpdir(), 'pb-site-out', 'dist');
+    assert.equal(assertSafeOutDir(repo, elsewhere), path.resolve(elsewhere));
+    // A sibling whose name merely starts with the repo's folder name is not an ancestor.
+    const sibling = `${repo}-out`;
+    assert.equal(assertSafeOutDir(repo, sibling), path.resolve(sibling));
+  });
+
+  test('CI pins every action to a commit sha', async () => {
+    const ci = await readFile(path.join(ROOT, '.github', 'workflows', 'ci.yaml'), 'utf8');
+    const uses = [...ci.matchAll(/^\s*-?\s*uses:\s*(\S+)/gm)].map((m) => m[1]);
+    assert.ok(uses.length >= 2, 'the workflow uses actions');
+    for (const ref of uses) assert.match(ref, /^[\w.-]+\/[\w.-]+@[0-9a-f]{40}$/, ref);
   });
 
   test('vercel.json serves this build with clean URLs and strict headers', () => {

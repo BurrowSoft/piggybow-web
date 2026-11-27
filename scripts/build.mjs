@@ -54,23 +54,38 @@ export function fillTokens(value, tokens, form, where) {
 }
 
 /**
- * Replaces {{key}} (escaped text, placeholders filled) and {{{slot}}} (raw HTML, build slots only).
+ * Replaces {{key}} (escaped text from `vars`, placeholders filled) and {{{slot}}} (raw HTML, taken
+ * only from `slots`, the build's own map, and only for RAW_SLOTS). The copy can never reach a raw slot.
  * A key with no text is an error, never an empty string.
  */
-export function render(template, vars, where, track = () => {}, tokens = {}) {
+export function render(template, vars, where, track = () => {}, tokens = {}, slots = {}) {
   return template.replace(/\{\{\{\s*([\w.]+)\s*\}\}\}|\{\{\s*([\w.]+)\s*\}\}/g, (_, raw, esc) => {
-    const key = raw ?? esc;
-    if (raw && !RAW_SLOTS.includes(key)) throw new Error(`${where}: {{{${key}}}} is not a build slot`);
-    const value = lookup(vars, key);
-    if (typeof value !== 'string') throw new Error(`${where}: no text for {{${key}}}`);
-    track(key);
-    return raw ? value : fillTokens(escapeHtml(value), tokens, 'html', `${where} ${key}`);
+    if (raw) {
+      if (!RAW_SLOTS.includes(raw)) throw new Error(`${where}: {{{${raw}}}} is not a build slot`);
+      const html = own(slots, raw) ? slots[raw] : undefined;
+      if (typeof html !== 'string') throw new Error(`${where}: no slot {{{${raw}}}} here`);
+      return html;
+    }
+    const value = lookup(vars, esc);
+    if (typeof value !== 'string') throw new Error(`${where}: no text for {{${esc}}}`);
+    track(esc);
+    return fillTokens(escapeHtml(value), tokens, 'html', `${where} ${esc}`);
   });
 }
 
-function assertSafeOutDir(root, outDir) {
+/**
+ * The output folder is deleted before each build, so refuse anything that would take more than
+ * the build's own output with it: the repo itself, any folder that contains it, a drive root,
+ * or a suspiciously short name.
+ */
+export function assertSafeOutDir(root, outDir) {
+  const same = process.platform === 'win32' ? (p) => p.toLowerCase() : (p) => p;
   const out = path.resolve(outDir);
-  if (out === path.resolve(root) || out === path.parse(out).root || path.basename(out).length < 3) {
+  const repo = path.resolve(root);
+  const o = same(out);
+  const r = same(repo);
+  const prefix = o.endsWith(path.sep) ? o : o + path.sep;
+  if (o === r || r.startsWith(prefix) || out === path.parse(out).root || path.basename(out).length < 3) {
     throw new Error(`refusing to clear ${out}`);
   }
   return out;
@@ -112,20 +127,21 @@ export async function build({
     track(key);
     return fillTokens(value, tokens, 'text', `${where} ${key}`);
   };
+  /** A page's path. It's escaped wherever it goes into HTML. */
   const href = (slug) => `/${slug}`;
   const base = {
     ...msgs,
     lang: config.defaultLocale,
     year: String(now.getUTCFullYear()),
   };
-  const draw = (template, vars, where) => render(template, vars, where, track, tokens);
+  const draw = (template, vars, where, slots = {}) => render(template, vars, where, track, tokens, slots);
 
   // "© year Company · Support · Privacy": a link appears only once its page is built.
   const footerLinks = pages
     .filter((page) => page.footer)
     .map(
       (page) =>
-        `<span aria-hidden="true">·</span><a href="${href(page.slug)}">${escapeHtml(text(`nav.${page.messages}`, 'footer'))}</a>`,
+        `<span aria-hidden="true">·</span><a href="${escapeHtml(href(page.slug))}">${escapeHtml(text(`nav.${page.messages}`, 'footer'))}</a>`,
     )
     .join('');
   // The home page's own heading is the name, so only the other pages carry the header.
@@ -152,13 +168,15 @@ export async function build({
         title: text(`${page.messages}.title`, page.fragment),
         description: text(`${page.messages}.description`, page.fragment),
         robots: mode === 'production' && !page.draft ? 'index, follow' : 'noindex, nofollow',
+      },
+      'layout.html',
+      {
         canonicalTag: `<link rel="canonical" href="${escapeHtml(config.siteUrl + href(page.slug))}">`,
         banner: page.draft ? `<p class="draft-banner" role="note">${escapeHtml(text('draftBanner', page.fragment))}</p>` : '',
         header: header(page.slug),
         content: draw(fragment, base, page.fragment),
         footerLinks,
       },
-      'layout.html',
     );
     await writeFile(path.join(out, `${page.slug || 'index'}.html`), finish(html, page.fragment));
   }
@@ -170,13 +188,15 @@ export async function build({
       title: text('notFound.title', '404.html'),
       description: text('notFound.lead', '404.html'),
       robots: 'noindex, nofollow',
+    },
+    'layout.html',
+    {
       canonicalTag: '',
       banner: '',
       header: header('404'),
       content: draw(notFound, base, '404.html'),
       footerLinks,
     },
-    'layout.html',
   );
   await writeFile(path.join(out, '404.html'), finish(notFoundHtml, '404.html'));
 
