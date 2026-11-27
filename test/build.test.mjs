@@ -628,6 +628,12 @@ describe('no hidden characters (decision 37)', () => {
     0xfeff, // zero-width no-break space / BOM
     0x00a0, // no-break space
     0x202f, // narrow no-break space
+    0x200e, // left-to-right mark
+    0x200f, // right-to-left mark
+    0x061c, // Arabic letter mark
+    0x2028, // line separator
+    0x2029, // paragraph separator
+    0x00ad, // soft hyphen
   ]);
   // Translation files may hold these, listed one by one: no-break spaces (fr, de) and Thai breaks.
   const TRANSLATION_ALLOWED = new Set([0x00a0, 0x202f, 0x200b]);
