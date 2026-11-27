@@ -1,0 +1,25 @@
+{
+  "siteUrl": "https://www.piggybow.com",
+  "supportEmail": "support@piggybow.com",
+  "defaultLocale": "en",
+  "pages": [
+    { "slug": "", "fragment": "index.html", "messages": "home" },
+    { "slug": "support", "fragment": "support.html", "messages": "support", "footer": true, "gate": "support-mailbox-live" },
+    { "slug": "privacy", "fragment": "privacy.html", "messages": "privacy", "footer": true, "gate": "privacy-text-approved" },
+    { "slug": "terms", "fragment": "terms.html", "messages": "terms", "footer": true, "gate": "terms-text-approved" }
+  ],
+  "conditions": {
+    "support-mailbox-live": {
+      "met": false,
+      "what": "The support mailbox shown on /support exists and a test message to it arrives (the owner's mailbox step). Until then /support is a draft: a page with an address that bounces would mislead people."
+    },
+    "privacy-text-approved": {
+      "met": false,
+      "what": "The privacy policy's final text is approved by the owner, and every claim in it matches what the app enforces today."
+    },
+    "terms-text-approved": {
+      "met": false,
+      "what": "The terms of use are approved by the owner. Needed once Plus (the subscription) ships."
+    }
+  }
+}

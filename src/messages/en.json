@@ -1,0 +1,42 @@
+{
+  "site": {
+    "name": "Piggybow",
+    "company": "BurrowSoft"
+  },
+  "nav": {
+    "label": "[DRAFT] Site",
+    "home": "[DRAFT] Piggybow home",
+    "support": "[DRAFT] Support",
+    "privacy": "[DRAFT] Privacy",
+    "terms": "[DRAFT] Terms"
+  },
+  "draftBanner": "Draft: not on the live site. This page stays hidden there until its text is approved.",
+  "home": {
+    "title": "[DRAFT] Home page title",
+    "description": "[DRAFT] Home page description for search and link previews",
+    "headline": "[DRAFT] Home headline",
+    "lead": "[DRAFT] One or two sentences about Piggybow",
+    "comingSoon": "[DRAFT] Coming soon line"
+  },
+  "support": {
+    "title": "[DRAFT] Support page title",
+    "description": "[DRAFT] Support page description",
+    "headline": "[DRAFT] Support headline",
+    "lead": "[DRAFT] How to reach us and what to include",
+    "emailLabel": "[DRAFT] Email us:"
+  },
+  "privacy": {
+    "title": "[DRAFT] Privacy policy title",
+    "description": "[DRAFT] Privacy policy description"
+  },
+  "terms": {
+    "title": "[DRAFT] Terms of use title",
+    "description": "[DRAFT] Terms of use description"
+  },
+  "notFound": {
+    "title": "[DRAFT] Page not found title",
+    "headline": "[DRAFT] Page not found headline",
+    "lead": "[DRAFT] Page not found explanation",
+    "home": "[DRAFT] Back to the home page"
+  }
+}

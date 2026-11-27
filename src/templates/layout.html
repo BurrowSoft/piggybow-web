@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<meta name="robots" content="{{robots}}">
+{{{canonicalTag}}}
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+{{{banner}}}
+<header class="site-header">
+<a class="brand" href="/" aria-label="{{nav.home}}">{{site.name}}</a>
+</header>
+<div class="rainbow" aria-hidden="true"></div>
+<main id="main">
+{{{content}}}
+</main>
+<footer class="site-footer">
+{{{footerNav}}}
+<p class="copyright">© {{year}} {{site.company}}</p>
+</footer>
+</body>
+</html>
