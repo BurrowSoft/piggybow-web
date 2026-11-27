@@ -116,27 +116,41 @@ h2 {
   font-size: 1.125rem;
 }
 
+.tagline {
+  font-size: clamp(1.25rem, 4.5vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
 .soon {
   color: var(--muted);
+}
+
+.faq h2 {
+  margin-top: 1.75rem;
+}
+
+.faq p {
+  margin-top: 0.25rem;
 }
 
 .site-footer {
   padding: var(--space);
   color: var(--muted);
   font-size: 0.875rem;
-  text-align: center;
 }
 
-.site-footer ul {
+/* "© 2026 BurrowSoft · Support · Privacy" on one line, wrapping whole items on narrow screens. */
+.footer-line {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.5rem 1.5rem;
-  margin: 0 0 0.75rem;
-  padding: 0;
-  list-style: none;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
 }
 
-.copyright {
-  margin: 0;
+.footer-line a {
+  /* A comfortable touch target without changing the line. */
+  padding: 0.25rem 0;
 }

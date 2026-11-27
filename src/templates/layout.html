@@ -13,16 +13,13 @@
 </head>
 <body>
 {{{banner}}}
-<header class="site-header">
-<a class="brand" href="/" aria-label="{{nav.home}}">{{site.name}}</a>
-</header>
+{{{header}}}
 <div class="rainbow" aria-hidden="true"></div>
 <main id="main">
 {{{content}}}
 </main>
 <footer class="site-footer">
-{{{footerNav}}}
-<p class="copyright">© {{year}} {{site.company}}</p>
+<p class="footer-line"><span>© {{year}} {{site.company}}</span>{{{footerLinks}}}</p>
 </footer>
 </body>
 </html>

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, describe, test } from 'node:test';
 
-import { build, escapeHtml, modeFromEnv, RAW_SLOTS, render, ROOT } from '../scripts/build.mjs';
+import { build, escapeHtml, fillTokens, modeFromEnv, RAW_SLOTS, render, ROOT } from '../scripts/build.mjs';
 
 const readJson = async (rel) => JSON.parse(await readFile(path.join(ROOT, rel), 'utf8'));
 const config = await readJson('site.config.json');
@@ -179,6 +179,49 @@ describe('every built page', async () => {
     const { outDir } = builds[0];
     const home = await readFile(path.join(outDir, 'index.html'), 'utf8');
     assert.ok(home.includes(`<link rel="canonical" href="${config.siteUrl}/">`));
+  });
+
+  test('the home page carries no header (its heading is the name); the others link home', async () => {
+    for (const { outDir, result } of builds) {
+      for (const { file, html } of await htmlFiles(outDir)) {
+        const hasHeader = html.includes('<header class="site-header"><a class="brand" href="/">Piggybow</a></header>');
+        assert.equal(hasHeader, file !== 'index.html', `${result.mode}/${file}`);
+      }
+    }
+  });
+
+  test('the footer is "© year BurrowSoft", then a link per page that is built', async () => {
+    const year = new Date().getUTCFullYear();
+    for (const { outDir, result } of builds) {
+      const home = await readFile(path.join(outDir, 'index.html'), 'utf8');
+      const line = home.match(/<p class="footer-line">(.*?)<\/p>/s)?.[1] ?? '';
+      assert.ok(line.startsWith(`<span>© ${year} BurrowSoft</span>`), result.mode);
+      const linked = [...line.matchAll(/<a href="\/([\w-]+)">/g)].map((m) => m[1]);
+      const built = result.pages.filter((p) => config.pages.find((c) => c.slug === p.slug).footer).map((p) => p.slug);
+      assert.deepEqual(linked, built, result.mode);
+    }
+  });
+});
+
+describe('copy', () => {
+  test('the support address is a mail link in the page and plain text in the description', async () => {
+    const { outDir } = await buildTo('preview', messages);
+    const html = await readFile(path.join(outDir, 'support.html'), 'utf8');
+    const email = config.supportEmail;
+    assert.ok(html.includes(`<p class="lead">Write to us at <a href="mailto:${email}">${email}</a>. We read every message.</p>`));
+    assert.ok(html.includes(`<meta name="description" content="Write to us at ${email}. We read every message.">`));
+  });
+
+  test('an unknown placeholder is an error', () => {
+    assert.throws(() => fillTokens('Hi {nope}', {}, 'html', 'test'), /unknown placeholder \{nope\}/);
+    assert.throws(() => render('{{a}}', { a: 'Hi {nope}' }, 'test'), /unknown placeholder/);
+  });
+
+  test('no guilt words in any text (the product rule for every screen)', () => {
+    const banned = /\b(over budget|behind|missed|failed|you should)\b/i;
+    for (const value of JSON.stringify(messages).match(/"(?:[^"\\]|\\.)*"/g)) {
+      assert.ok(!banned.test(value), `${value} breaks the no-guilt rule`);
+    }
   });
 });
 

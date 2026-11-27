@@ -13,7 +13,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** Slots the build fills with its own HTML. Templates may use {{{slot}}} only for these. */
-export const RAW_SLOTS = Object.freeze(['banner', 'canonicalTag', 'content', 'footerNav']);
+export const RAW_SLOTS = Object.freeze(['banner', 'canonicalTag', 'content', 'footerLinks', 'header']);
 
 export function modeFromEnv(env = process.env) {
   if (env.SHOW_DRAFTS === '1') return 'preview';
@@ -43,17 +43,28 @@ function lookup(vars, key) {
 }
 
 /**
- * Replaces {{key}} (escaped text) and {{{slot}}} (raw HTML, build slots only).
+ * Fills {name} placeholders inside a text: `html` form in page bodies (e.g. a mailto link),
+ * `text` form in titles and descriptions. An unknown placeholder is an error.
+ */
+export function fillTokens(value, tokens, form, where) {
+  return value.replace(/\{(\w+)\}/g, (_, name) => {
+    if (!own(tokens, name)) throw new Error(`${where}: unknown placeholder {${name}}`);
+    return tokens[name][form];
+  });
+}
+
+/**
+ * Replaces {{key}} (escaped text, placeholders filled) and {{{slot}}} (raw HTML, build slots only).
  * A key with no text is an error, never an empty string.
  */
-export function render(template, vars, where, track = () => {}) {
+export function render(template, vars, where, track = () => {}, tokens = {}) {
   return template.replace(/\{\{\{\s*([\w.]+)\s*\}\}\}|\{\{\s*([\w.]+)\s*\}\}/g, (_, raw, esc) => {
     const key = raw ?? esc;
     if (raw && !RAW_SLOTS.includes(key)) throw new Error(`${where}: {{{${key}}}} is not a build slot`);
     const value = lookup(vars, key);
     if (typeof value !== 'string') throw new Error(`${where}: no text for {{${key}}}`);
     track(key);
-    return raw ? value : escapeHtml(value);
+    return raw ? value : fillTokens(escapeHtml(value), tokens, 'html', `${where} ${key}`);
   });
 }
 
@@ -90,26 +101,36 @@ export async function build({
     .map((page) => ({ ...page, draft: !isMet(page.gate) }))
     .filter((page) => mode === 'preview' || !page.draft);
 
+  const email = escapeHtml(config.supportEmail);
+  const tokens = {
+    supportEmail: { text: config.supportEmail, html: `<a href="mailto:${email}">${email}</a>` },
+  };
+  /** A text for an attribute or a build slot: placeholders filled as plain text, escaped later. */
   const text = (key, where) => {
     const value = lookup(msgs, key);
     if (typeof value !== 'string') throw new Error(`${where}: no text for ${key}`);
     track(key);
-    return value;
+    return fillTokens(value, tokens, 'text', `${where} ${key}`);
   };
   const href = (slug) => `/${slug}`;
   const base = {
     ...msgs,
     lang: config.defaultLocale,
-    supportEmail: config.supportEmail,
     year: String(now.getUTCFullYear()),
   };
+  const draw = (template, vars, where) => render(template, vars, where, track, tokens);
 
-  const footerPages = pages.filter((page) => page.footer);
-  const footerNav = footerPages.length
-    ? `<nav aria-label="${escapeHtml(text('nav.label', 'footer'))}"><ul>${footerPages
-        .map((page) => `<li><a href="${href(page.slug)}">${escapeHtml(text(`nav.${page.messages}`, 'footer'))}</a></li>`)
-        .join('')}</ul></nav>`
-    : '';
+  // "© year Company · Support · Privacy": a link appears only once its page is built.
+  const footerLinks = pages
+    .filter((page) => page.footer)
+    .map(
+      (page) =>
+        `<span aria-hidden="true">·</span><a href="${href(page.slug)}">${escapeHtml(text(`nav.${page.messages}`, 'footer'))}</a>`,
+    )
+    .join('');
+  // The home page's own heading is the name, so only the other pages carry the header.
+  const header = (slug) =>
+    slug === '' ? '' : `<header class="site-header"><a class="brand" href="/">${escapeHtml(text('site.name', 'header'))}</a></header>`;
 
   const finish = (html, where) => {
     if (mode === 'production' && html.includes('[DRAFT]')) {
@@ -124,7 +145,7 @@ export async function build({
 
   for (const page of pages) {
     const fragment = await readFile(path.join(root, 'src', 'pages', page.fragment), 'utf8');
-    const html = render(
+    const html = draw(
       layout,
       {
         ...base,
@@ -133,16 +154,16 @@ export async function build({
         robots: mode === 'production' && !page.draft ? 'index, follow' : 'noindex, nofollow',
         canonicalTag: `<link rel="canonical" href="${escapeHtml(config.siteUrl + href(page.slug))}">`,
         banner: page.draft ? `<p class="draft-banner" role="note">${escapeHtml(text('draftBanner', page.fragment))}</p>` : '',
-        content: render(fragment, base, page.fragment, track),
-        footerNav,
+        header: header(page.slug),
+        content: draw(fragment, base, page.fragment),
+        footerLinks,
       },
       'layout.html',
-      track,
     );
     await writeFile(path.join(out, `${page.slug || 'index'}.html`), finish(html, page.fragment));
   }
 
-  const notFoundHtml = render(
+  const notFoundHtml = draw(
     layout,
     {
       ...base,
@@ -151,11 +172,11 @@ export async function build({
       robots: 'noindex, nofollow',
       canonicalTag: '',
       banner: '',
-      content: render(notFound, base, '404.html', track),
-      footerNav,
+      header: header('404'),
+      content: draw(notFound, base, '404.html'),
+      footerLinks,
     },
     'layout.html',
-    track,
   );
   await writeFile(path.join(out, '404.html'), finish(notFoundHtml, '404.html'));
 
