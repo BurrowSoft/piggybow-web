@@ -16,8 +16,10 @@
     "tagline": "A friendly money journal with a pig who never judges.",
     "body": "Note what you spend and save, watch a rainbow fill in as you reach your goals, and get small, kind ideas for saving. No bank login, no account: your entries stay with you.",
     "comingSoon": "Coming soon to Android and iPhone.",
-    "badgeAppStore": "[DRAFT] Download on the App Store",
-    "badgeGooglePlay": "[DRAFT] Get it on Google Play"
+    "badgeAppStore": "Download on the App Store",
+    "badgeGooglePlay": "Get it on Google Play",
+    "soonIphone": "Coming soon to iPhone.",
+    "soonAndroid": "Coming soon to Android."
   },
   "support": {
     "title": "Help & contact · Piggybow",

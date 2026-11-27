@@ -193,11 +193,16 @@ export async function build({
   // The home page's store badges, in config order (App Store first, as Apple's guidelines ask).
   // A store shows once its condition is met; previews show every store, with a labelled
   // placeholder until the official badge artwork and the link exist. While no store shows, the
-  // "coming soon" line takes their place.
+  // "coming soon" line takes their place; once one shows, each store still to come gets its own
+  // line ("Coming soon to iPhone.").
   const storeLinks = [];
+  const soonKeys = [];
   for (const store of config.stores ?? []) {
     const live = isMet(store.gate);
-    if (mode === 'production' && !live) continue;
+    if (mode === 'production' && !live) {
+      soonKeys.push(store.soon);
+      continue;
+    }
     const alt = text(store.label, 'stores');
     const badgeFile = path.join(root, 'src', 'assets', ...store.badge.split('/'));
     const hasBadge = existsSync(badgeFile);
@@ -210,9 +215,10 @@ export async function build({
         : `<span class="store store-placeholder">${escapeHtml(alt)}</span>`,
     );
   }
+  const soon = (key) => `<p class="soon">${escapeHtml(text(key, 'stores'))}</p>`;
   const stores = storeLinks.length
-    ? `<p class="stores">${storeLinks.join('')}</p>`
-    : `<p class="soon">${escapeHtml(text('home.comingSoon', 'stores'))}</p>`;
+    ? `<p class="stores">${storeLinks.join('')}</p>${soonKeys.map(soon).join('')}`
+    : soon('home.comingSoon');
 
   const finish = (html, where) => {
     if (mode === 'production' && html.includes('[DRAFT]')) {

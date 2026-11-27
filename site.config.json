@@ -12,6 +12,7 @@
     {
       "id": "app-store",
       "label": "home.badgeAppStore",
+      "soon": "home.soonIphone",
       "url": null,
       "badge": "badges/app-store.svg",
       "gate": "ios-store-live"
@@ -19,6 +20,7 @@
     {
       "id": "google-play",
       "label": "home.badgeGooglePlay",
+      "soon": "home.soonAndroid",
       "url": "https://play.google.com/store/apps/details?id=com.burrowsoft.piggybow",
       "badge": "badges/google-play.svg",
       "gate": "android-store-live"
