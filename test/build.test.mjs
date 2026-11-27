@@ -616,3 +616,56 @@ test('no leftovers from the app this was modelled on', async () => {
   };
   await walk(ROOT);
 });
+
+describe('no hidden characters (decision 37)', () => {
+  // Built from code points, so this file itself contains none of them.
+  const range = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
+  const BANNED = new Set([
+    ...range(0x202a, 0x202e), // bidi embeddings and overrides
+    ...range(0x2066, 0x2069), // bidi isolates
+    ...range(0x200b, 0x200d), // zero-width space, non-joiner, joiner
+    0x2060, // word joiner
+    0xfeff, // zero-width no-break space / BOM
+    0x00a0, // no-break space
+    0x202f, // narrow no-break space
+  ]);
+  // Translation files may hold these, listed one by one: no-break spaces (fr, de) and Thai breaks.
+  const TRANSLATION_ALLOWED = new Set([0x00a0, 0x202f, 0x200b]);
+  const isTranslation = (rel) => /^src\/messages\/[^/]+\.json$/.test(rel);
+  const TEXT = /\.(mjs|js|json|html|css|md|ya?ml|svg|txt)$|^\.git(attributes|ignore)$/;
+
+  const hidden = (text, allowed) =>
+    [...text].map((ch) => ch.codePointAt(0)).filter((cp) => BANNED.has(cp) && !allowed.has(cp));
+
+  test('no source, config, workflow or doc file holds a bidi control or an invisible character', async () => {
+    const skip = new Set(['.git', 'node_modules', 'dist']);
+    const found = [];
+    const walk = async (dir) => {
+      for (const entry of await readdir(dir, { withFileTypes: true })) {
+        if (skip.has(entry.name)) continue;
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          await walk(full);
+          continue;
+        }
+        const rel = path.relative(ROOT, full).split(path.sep).join('/');
+        if (!TEXT.test(entry.name)) continue;
+        const bad = hidden(await readFile(full, 'utf8'), isTranslation(rel) ? TRANSLATION_ALLOWED : new Set());
+        if (bad.length) found.push(`${rel}: ${[...new Set(bad)].map((cp) => 'U+' + cp.toString(16).toUpperCase().padStart(4, '0')).join(' ')}`);
+      }
+    };
+    await walk(ROOT);
+    assert.deepEqual(found, []);
+  });
+
+  test('the check catches each banned character, and allows only the listed ones in translations (control)', () => {
+    for (const cp of BANNED) {
+      const sample = `a${String.fromCodePoint(cp)}b`;
+      assert.equal(hidden(sample, new Set()).length, 1, cp.toString(16));
+      assert.equal(hidden(sample, TRANSLATION_ALLOWED).length, TRANSLATION_ALLOWED.has(cp) ? 0 : 1, cp.toString(16));
+    }
+    assert.ok(isTranslation('src/messages/fr.json'));
+    assert.ok(!isTranslation('src/pages/index.html'));
+    assert.deepEqual(hidden('plain text, "quotes" and – dashes · dots', new Set()), []);
+  });
+});
