@@ -116,6 +116,14 @@ h2 {
   font-size: 1.125rem;
 }
 
+/* The happy pig above the home heading: decorative (alt=""), sized so it never crowds 320 px. */
+.pig {
+  display: block;
+  width: clamp(7rem, 32vw, 10rem);
+  height: auto;
+  margin: 0.5rem 0 0;
+}
+
 .tagline {
   font-size: clamp(1.25rem, 4.5vw, 1.5rem);
   font-weight: 600;

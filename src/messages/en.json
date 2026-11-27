@@ -29,7 +29,7 @@
       },
       "newPhone": {
         "q": "Can I move to a new phone?",
-        "a": "Yes, if your phone backs up your apps: restore that backup on the new phone. App lock turns off after a restore, so turn it on again in Me. You can also keep a copy any time: Me → Export my data saves a spreadsheet file (CSV)."
+        "a": "Yes, to a new phone of the same kind (Android to Android, iPhone to iPhone), if your phone backs up your apps: restore that backup on the new phone. App lock turns off after a restore, so turn it on again in Me. Moving between Android and iPhone isn't possible yet. You can always keep a copy: Me → Export my data saves a spreadsheet file (CSV)."
       },
       "delete": {
         "q": "How do I delete my data?",

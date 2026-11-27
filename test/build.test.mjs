@@ -353,10 +353,23 @@ describe('config', () => {
     for (const slug of ['', 'privacy', 'terms', 'support']) assert.ok(slugs.includes(slug), `/${slug}`);
   });
 
-  test('the output folder can never be the repo, a folder that holds it, or a drive root', () => {
+  test('the output folder can never be the repo, a folder that holds it, a drive root, or anything in the repo but dist/', () => {
     const repo = ROOT;
-    const refused = [repo, path.dirname(repo), path.dirname(path.dirname(repo)), path.parse(repo).root, path.join(repo, 'x')];
-    if (process.platform === 'win32') refused.push(repo.toUpperCase(), path.dirname(repo).toLowerCase());
+    const refused = [
+      repo,
+      path.dirname(repo),
+      path.dirname(path.dirname(repo)),
+      path.parse(repo).root,
+      path.join(repo, 'x'),
+      path.join(repo, 'src'),
+      path.join(repo, 'test'),
+      path.join(repo, 'dist', 'pages'),
+      path.join(repo, 'src', 'dist'),
+    ];
+    if (process.platform === 'win32') {
+      refused.push(repo.toUpperCase(), path.dirname(repo).toLowerCase(), path.join(repo, 'SRC'));
+      assert.equal(assertSafeOutDir(repo, path.join(repo, 'DIST')), path.join(repo, 'DIST'), 'dist/ in any case on Windows');
+    }
     for (const dir of refused) assert.throws(() => assertSafeOutDir(repo, dir), /refusing to clear/, dir);
     assert.equal(assertSafeOutDir(repo, path.join(repo, 'dist')), path.join(repo, 'dist'));
     const elsewhere = path.join(tmpdir(), 'pb-site-out', 'dist');
@@ -387,6 +400,27 @@ describe('config', () => {
     }
     assert.equal(get('X-Content-Type-Options'), 'nosniff');
     assert.equal(get('Referrer-Policy'), 'strict-origin-when-cross-origin');
+  });
+});
+
+describe('assets', () => {
+  test('every SVG is plain shapes: no script, link, embedded image, style or external URL', async () => {
+    const dir = path.join(ROOT, 'src', 'assets');
+    const svgs = (await readdir(dir)).filter((f) => f.endsWith('.svg'));
+    assert.ok(svgs.length >= 2, 'favicon and pig');
+    for (const file of svgs) {
+      const svg = await readFile(path.join(dir, file), 'utf8');
+      const withoutNamespace = svg.replace('xmlns="http://www.w3.org/2000/svg"', '');
+      assert.ok(!/<(script|a|image|foreignObject|use|style|iframe)\b|\bon\w+=|href=|url\(|https?:/i.test(withoutNamespace), file);
+      assert.match(svg, /<title>Piggybow<\/title>/, `${file} carries a plain title`);
+    }
+  });
+
+  test('the home page shows the happy pig as decoration, with a fixed size (no layout shift)', async () => {
+    const { outDir } = await buildTo('production', messages);
+    const home = await readFile(path.join(outDir, 'index.html'), 'utf8');
+    assert.ok(home.includes('<img class="pig" src="/assets/pig-happy.svg" alt="" width="200" height="200">'));
+    assert.ok(home.indexOf('class="pig"') < home.indexOf('<h1>'), 'the pig sits above the heading');
   });
 });
 

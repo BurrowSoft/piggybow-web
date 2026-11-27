@@ -97,8 +97,8 @@ export function render(template, vars, where, track = () => {}, tokens = {}, slo
 
 /**
  * The output folder is deleted before each build, so refuse anything that would take more than
- * the build's own output with it: the repo itself, any folder that contains it, a drive root,
- * or a suspiciously short name.
+ * the build's own output with it: the repo itself, any folder that contains it, any folder inside
+ * the repo other than dist/, a drive root, or a suspiciously short name.
  */
 export function assertSafeOutDir(root, outDir) {
   const same = process.platform === 'win32' ? (p) => p.toLowerCase() : (p) => p;
@@ -106,8 +106,15 @@ export function assertSafeOutDir(root, outDir) {
   const repo = path.resolve(root);
   const o = same(out);
   const r = same(repo);
-  const prefix = o.endsWith(path.sep) ? o : o + path.sep;
-  if (o === r || r.startsWith(prefix) || out === path.parse(out).root || path.basename(out).length < 3) {
+  const withSep = (p) => (p.endsWith(path.sep) ? p : p + path.sep);
+  const insideRepo = o.startsWith(withSep(r));
+  if (
+    o === r ||
+    r.startsWith(withSep(o)) ||
+    (insideRepo && o !== same(path.join(repo, 'dist'))) ||
+    out === path.parse(out).root ||
+    path.basename(out).length < 3
+  ) {
     throw new Error(`refusing to clear ${out}`);
   }
   return out;
