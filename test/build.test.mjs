@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, describe, test } from 'node:test';
@@ -183,7 +183,8 @@ describe('every built page', async () => {
     for (const { outDir, result } of builds) {
       for (const { file, html } of await htmlFiles(outDir)) {
         for (const url of attrs(html)) {
-          const ok = url.startsWith('/') || url.startsWith('mailto:') || url.startsWith(`${config.siteUrl}/`);
+          const storePage = (config.stores ?? []).some((s) => s.url === url);
+          const ok = url.startsWith('/') || url.startsWith('mailto:') || url.startsWith(`${config.siteUrl}/`) || storePage;
           assert.ok(ok, `${result.mode}/${file} references ${url}`);
         }
         assert.ok(!/<script\b/i.test(html), `${result.mode}/${file} has no script`);
@@ -277,7 +278,9 @@ describe('text', () => {
 
   test('every message is used on some page (no stale copy)', async () => {
     const used = new Set();
+    // Production and preview together: some text shows in only one of them (e.g. "coming soon").
     await buildTo('preview', messages, (key) => used.add(key));
+    await buildTo('production', approved, (key) => used.add(key));
     const leaves = (obj, prefix = '') =>
       Object.entries(obj).flatMap(([k, v]) => (typeof v === 'string' ? [prefix + k] : leaves(v, `${prefix}${k}.`)));
     for (const key of leaves(messages)) assert.ok(used.has(key), `${key} is never used`);
@@ -344,7 +347,13 @@ describe('config', () => {
   test('the conditions are pinned: flipping one is its own reviewed change', () => {
     assert.deepEqual(
       Object.fromEntries(Object.entries(config.conditions).map(([id, c]) => [id, c.met])),
-      { 'support-mailbox-live': false, 'privacy-text-approved': false, 'terms-text-approved': false },
+      {
+        'support-mailbox-live': false,
+        'privacy-text-approved': false,
+        'terms-text-approved': false,
+        'ios-store-live': false,
+        'android-store-live': false,
+      },
     );
   });
 
@@ -400,6 +409,99 @@ describe('config', () => {
     }
     assert.equal(get('X-Content-Type-Options'), 'nosniff');
     assert.equal(get('Referrer-Policy'), 'strict-origin-when-cross-origin');
+  });
+});
+
+describe('store badges', () => {
+  const play = config.stores.find((s) => s.id === 'google-play');
+  const withLive = (ids, change = (s) => s) => ({
+    ...config,
+    stores: config.stores.map((s) => change({ ...s })),
+    conditions: Object.fromEntries(
+      Object.entries(config.conditions).map(([id, c]) => [
+        id,
+        { ...c, met: ids.includes(id) ? true : c.met },
+      ]),
+    ),
+  });
+
+  /** A throwaway copy of the site's sources, with stand-in badge files (never in the repo). */
+  async function rootWithBadges(...files) {
+    const root = await mkdtemp(path.join(tmpdir(), 'pb-root-'));
+    temps.push(root);
+    await cp(path.join(ROOT, 'src'), path.join(root, 'src'), { recursive: true });
+    await mkdir(path.join(root, 'src', 'assets', 'badges'), { recursive: true });
+    for (const f of files) await writeFile(path.join(root, 'src', 'assets', f), '<svg xmlns="http://www.w3.org/2000/svg"/>');
+    return root;
+  }
+
+  test('config: App Store first; each store names a known gate, a copy key and a badge under badges/', () => {
+    assert.deepEqual(config.stores.map((s) => s.id), ['app-store', 'google-play']);
+    for (const s of config.stores) {
+      assert.ok(Object.hasOwn(config.conditions, s.gate), s.id);
+      assert.ok(s.badge.startsWith('badges/') && s.badge.endsWith('.svg'), s.id);
+      const [ns, key] = s.label.split('.');
+      assert.equal(typeof messages[ns][key], 'string', s.label);
+      if (s.url !== null) assert.match(s.url, /^https:\/\/(?:apps\.apple\.com|play\.google\.com)\//, s.id);
+    }
+    assert.equal(play.url, 'https://play.google.com/store/apps/details?id=com.burrowsoft.piggybow');
+  });
+
+  test('production with no store live: the "coming soon" line, no badges', async () => {
+    const { outDir } = await buildTo('production', approved);
+    const home = await readFile(path.join(outDir, 'index.html'), 'utf8');
+    assert.ok(home.includes(`<p class="soon">${messages.home.comingSoon}</p>`));
+    assert.ok(!home.includes('class="stores"'));
+  });
+
+  test('preview: every store, as placeholders until the official artwork is added', async () => {
+    const { outDir } = await buildTo('preview', messages);
+    const home = await readFile(path.join(outDir, 'index.html'), 'utf8');
+    const placeholders = [...home.matchAll(/<span class="store store-placeholder">([^<]+)<\/span>/g)].map((m) => m[1]);
+    assert.deepEqual(placeholders, [messages.home.badgeAppStore, messages.home.badgeGooglePlay]);
+    assert.ok(!home.includes('class="soon"'));
+  });
+
+  test('production with Google Play live: its badge links to the store page, and "coming soon" goes', async () => {
+    const root = await rootWithBadges('badges/google-play.svg');
+    const outDir = path.join(root, 'dist');
+    await build({ root, outDir, mode: 'production', messages: approved, config: withLive(['android-store-live']) });
+    const home = await readFile(path.join(outDir, 'index.html'), 'utf8');
+    assert.ok(
+      home.includes(
+        `<p class="stores"><a class="store" href="${play.url}"><img src="/assets/badges/google-play.svg" alt="${approved.home.badgeGooglePlay}" height="48"></a></p>`,
+      ),
+    );
+    assert.ok(!home.includes('class="soon"'));
+    assert.ok(!home.includes('app-store'), 'the App Store badge waits for its own condition');
+    assert.ok((await readdir(path.join(outDir, 'assets', 'badges'))).includes('google-play.svg'));
+  });
+
+  test('a live store needs its official badge file, a store page URL, and final text', async () => {
+    const live = withLive(['android-store-live']);
+    await assert.rejects(
+      build({ outDir: path.join(await mkdtemp(path.join(tmpdir(), 'pb-x-')), 'dist'), mode: 'production', messages: approved, config: live }),
+      /google-play is live but badges\/google-play\.svg is missing/,
+    );
+    const root = await rootWithBadges('badges/google-play.svg', 'badges/app-store.svg');
+    await assert.rejects(
+      build({ root, outDir: path.join(root, 'dist'), mode: 'production', messages: approved, config: withLive(['ios-store-live']) }),
+      /app-store is live but has no store page URL/,
+    );
+    await assert.rejects(
+      build({
+        root,
+        outDir: path.join(root, 'dist'),
+        mode: 'production',
+        messages: approved,
+        config: withLive(['android-store-live'], (s) => (s.id === 'google-play' ? { ...s, url: 'https://example.com/piggybow' } : s)),
+      }),
+      /no store page URL/,
+    );
+    await assert.rejects(
+      build({ root, outDir: path.join(root, 'dist'), mode: 'production', messages, config: live }),
+      /\[DRAFT\]/,
+    );
   });
 });
 

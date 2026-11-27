@@ -8,6 +8,22 @@
     { "slug": "privacy", "fragment": "privacy.html", "messages": "privacy", "footer": true, "gate": "privacy-text-approved", "policy": "privacy" },
     { "slug": "terms", "fragment": "terms.html", "messages": "terms", "footer": true, "gate": "terms-text-approved" }
   ],
+  "stores": [
+    {
+      "id": "app-store",
+      "label": "home.badgeAppStore",
+      "url": null,
+      "badge": "badges/app-store.svg",
+      "gate": "ios-store-live"
+    },
+    {
+      "id": "google-play",
+      "label": "home.badgeGooglePlay",
+      "url": "https://play.google.com/store/apps/details?id=com.burrowsoft.piggybow",
+      "badge": "badges/google-play.svg",
+      "gate": "android-store-live"
+    }
+  ],
   "policyVersions": {
     "privacy": "[DRAFT] Effective date, set when the text is approved. It must equal the version the app records."
   },
@@ -23,6 +39,14 @@
     "terms-text-approved": {
       "met": false,
       "what": "The terms of use are approved by the owner. Needed once Plus (the subscription) ships."
+    },
+    "ios-store-live": {
+      "met": false,
+      "what": "Piggybow is public on the App Store, its product page URL is set here, and src/assets/badges/app-store.svg is Apple's official badge artwork, unmodified."
+    },
+    "android-store-live": {
+      "met": false,
+      "what": "Piggybow is public on Google Play (production), and src/assets/badges/google-play.svg is Google's official badge artwork, unmodified."
     }
   }
 }

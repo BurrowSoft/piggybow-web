@@ -6,6 +6,7 @@
 //   banner; nothing is indexable.
 // Anything that isn't explicitly a preview is built as production (fails closed).
 
+import { existsSync } from 'node:fs';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -13,7 +14,18 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** Slots the build fills with its own HTML. Templates may use {{{slot}}} only for these. */
-export const RAW_SLOTS = Object.freeze(['banner', 'canonicalTag', 'content', 'effectiveDate', 'footerLinks', 'header']);
+export const RAW_SLOTS = Object.freeze([
+  'banner',
+  'canonicalTag',
+  'content',
+  'effectiveDate',
+  'footerLinks',
+  'header',
+  'stores',
+]);
+
+/** Where a live store badge may link: the stores' own product pages. */
+const STORE_URL = /^https:\/\/(?:apps\.apple\.com|play\.google\.com)\/[^\s"'<>]+$/;
 
 export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -127,9 +139,10 @@ export async function build({
   messages,
   now = new Date(),
   track = () => {},
+  config: configOverride,
 } = {}) {
   if (mode !== 'production' && mode !== 'preview') throw new Error(`unknown mode: ${mode}`);
-  const config = JSON.parse(await readFile(path.join(root, 'site.config.json'), 'utf8'));
+  const config = configOverride ?? JSON.parse(await readFile(path.join(root, 'site.config.json'), 'utf8'));
   const msgs =
     messages ??
     JSON.parse(await readFile(path.join(root, 'src', 'messages', `${config.defaultLocale}.json`), 'utf8'));
@@ -177,6 +190,30 @@ export async function build({
   const header = (slug) =>
     slug === '' ? '' : `<header class="site-header"><a class="brand" href="/">${escapeHtml(text('site.name', 'header'))}</a></header>`;
 
+  // The home page's store badges, in config order (App Store first, as Apple's guidelines ask).
+  // A store shows once its condition is met; previews show every store, with a labelled
+  // placeholder until the official badge artwork and the link exist. While no store shows, the
+  // "coming soon" line takes their place.
+  const storeLinks = [];
+  for (const store of config.stores ?? []) {
+    const live = isMet(store.gate);
+    if (mode === 'production' && !live) continue;
+    const alt = text(store.label, 'stores');
+    const badgeFile = path.join(root, 'src', 'assets', ...store.badge.split('/'));
+    const hasBadge = existsSync(badgeFile);
+    const hasUrl = typeof store.url === 'string' && STORE_URL.test(store.url);
+    if (live && !hasUrl) throw new Error(`stores: ${store.id} is live but has no store page URL`);
+    if (live && !hasBadge) throw new Error(`stores: ${store.id} is live but ${store.badge} is missing`);
+    storeLinks.push(
+      hasBadge && hasUrl
+        ? `<a class="store" href="${escapeHtml(store.url)}"><img src="/assets/${escapeHtml(store.badge)}" alt="${escapeHtml(alt)}" height="48"></a>`
+        : `<span class="store store-placeholder">${escapeHtml(alt)}</span>`,
+    );
+  }
+  const stores = storeLinks.length
+    ? `<p class="stores">${storeLinks.join('')}</p>`
+    : `<p class="soon">${escapeHtml(text('home.comingSoon', 'stores'))}</p>`;
+
   const finish = (html, where) => {
     if (mode === 'production' && html.includes('[DRAFT]')) {
       throw new Error(`${where}: placeholder [DRAFT] text can't go to production`);
@@ -207,14 +244,17 @@ export async function build({
           fragment,
           base,
           page.fragment,
-          page.policy
-            ? {
-                effectiveDate: effectiveDateHtml(config.policyVersions?.[page.policy], {
-                  production: mode === 'production',
-                  where: page.fragment,
-                }),
-              }
-            : {},
+          {
+            stores,
+            ...(page.policy
+              ? {
+                  effectiveDate: effectiveDateHtml(config.policyVersions?.[page.policy], {
+                    production: mode === 'production',
+                    where: page.fragment,
+                  }),
+                }
+              : {}),
+          },
         ),
         footerLinks,
       },
