@@ -27,6 +27,9 @@ export const RAW_SLOTS = Object.freeze([
 /** Where a live store badge may link: the stores' own product pages. */
 const STORE_URL = /^https:\/\/(?:apps\.apple\.com|play\.google\.com)\/[^\s"'<>]+$/;
 
+/** A badge file's path under src/assets: one plain name in badges/, so it can't point elsewhere. */
+const BADGE_PATH = /^badges\/[a-z0-9]+(?:-[a-z0-9]+)*\.svg$/;
+
 export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
@@ -204,6 +207,7 @@ export async function build({
       continue;
     }
     const alt = text(store.label, 'stores');
+    if (!BADGE_PATH.test(store.badge)) throw new Error(`stores: ${store.id} badge path "${store.badge}" isn't badges/<name>.svg`);
     const badgeFile = path.join(root, 'src', 'assets', ...store.badge.split('/'));
     const hasBadge = existsSync(badgeFile);
     const hasUrl = typeof store.url === 'string' && STORE_URL.test(store.url);

@@ -51,6 +51,13 @@ async function rootWithBadges(...files) {
   return root;
 }
 
+/** A throwaway output folder, removed after the run. */
+async function tmpOut() {
+  const dir = await mkdtemp(path.join(tmpdir(), 'pb-x-'));
+  temps.push(dir);
+  return path.join(dir, 'dist');
+}
+
 async function buildTo(mode, msgs, track) {
   const outDir = path.join(await mkdtemp(path.join(tmpdir(), 'pb-site-')), 'dist');
   temps.push(path.dirname(outDir));
@@ -521,10 +528,24 @@ describe('store badges', () => {
     assert.ok((await readdir(path.join(outDir, 'assets', 'badges'))).includes('google-play.svg'));
   });
 
+  test('a badge path must be one plain name in badges/, in every mode', async () => {
+    for (const bad of ['../evil.svg', 'badges/../../x.svg', 'badges/sub/x.svg', '/etc/x.svg', 'badges/x.png', 'badges/X Y.svg']) {
+      const cfg = { ...config, stores: config.stores.map((s) => (s.id === 'google-play' ? { ...s, badge: bad } : s)) };
+      for (const mode of ['preview', 'production']) {
+        const live = mode === 'production' ? withLive(['android-store-live'], (s) => (s.id === 'google-play' ? { ...s, badge: bad } : s)) : cfg;
+        await assert.rejects(
+          build({ outDir: await tmpOut(), mode, messages: approved, config: live }),
+          /isn't badges\/<name>\.svg/,
+          `${mode} ${bad}`,
+        );
+      }
+    }
+  });
+
   test('a live store needs its official badge file, a store page URL, and final text', async () => {
     const live = withLive(['android-store-live']);
     await assert.rejects(
-      build({ outDir: path.join(await mkdtemp(path.join(tmpdir(), 'pb-x-')), 'dist'), mode: 'production', messages: approved, config: live }),
+      build({ outDir: await tmpOut(), mode: 'production', messages: approved, config: live }),
       /google-play is live but badges\/google-play\.svg is missing/,
     );
     const root = await rootWithBadges('badges/google-play.svg', 'badges/app-store.svg');
