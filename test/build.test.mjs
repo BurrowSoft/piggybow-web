@@ -107,6 +107,13 @@ describe('production', async () => {
     draftHome.home.headline = '[DRAFT] not yet approved';
     await assert.rejects(buildTo('production', draftHome), /\[DRAFT\]/);
   });
+
+  test('the real copy builds for production: what is live has final text, the rest is gated off', async () => {
+    const { outDir: real, result } = await buildTo('production', messages);
+    const live = config.pages.filter((p) => !p.gate || config.conditions[p.gate].met === true).map((p) => p.slug);
+    assert.deepEqual(result.pages.map((p) => p.slug), live);
+    for (const { file, html } of await htmlFiles(real)) assert.ok(!html.includes('[DRAFT]'), file);
+  });
 });
 
 describe('preview', async () => {
