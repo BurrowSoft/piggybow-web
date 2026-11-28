@@ -415,6 +415,7 @@ describe('legal pages', () => {
       'Anthropic doesn&#39;t use it to train AI models and deletes it within 30 days',
       'for 90 days to improve our filter',
       'Supabase&#39;s logs keep your phone&#39;s IP address for up to 7 days',
+      'Turn tips off in Me → Pig tips, or use Delete all my data, and we delete that ID and its count.',
       'the European Commission&#39;s Standard Contractual Clauses',
       '<strong>Pig tips</strong> stay off until you say yes',
     ]) {
