@@ -404,6 +404,27 @@ describe('legal pages', () => {
     assert.ok(html.includes(`<a href="mailto:${config.supportEmail}">`), 'the contact section links the support address');
   });
 
+  // Pig tips (decision 94): each claim as the app and the tips server do it.
+  test('the privacy policy and Help say what pig tips send, to whom, and for how long', async () => {
+    const { outDir } = await buildTo('production', messages);
+    const privacy = await readFile(path.join(outDir, 'privacy.html'), 'utf8');
+    for (const line of [
+      'Your journal doesn&#39;t. Piggybow has no account and no server for your money notes.',
+      '<strong>Pig tips, only if you turn them on.</strong>',
+      'It never sends your notes, amounts, dates, goal names or anything you typed.',
+      'Anthropic doesn&#39;t use it to train AI models and deletes it within 30 days',
+      'for 90 days to improve our filter',
+      'Supabase&#39;s logs keep your phone&#39;s IP address for up to 7 days',
+      'the European Commission&#39;s Standard Contractual Clauses',
+      '<strong>Pig tips</strong> stay off until you say yes',
+    ]) {
+      assert.ok(privacy.includes(line), line);
+    }
+    const support = await readFile(path.join(outDir, 'support.html'), 'utf8');
+    assert.ok(support.includes('What are pig tips, and what do they send?'));
+    assert.ok(support.includes('Never your notes, amounts or anything you typed.'));
+  });
+
   test('the privacy policy is live: its effective date, and what an email to us gives us', async () => {
     const { outDir } = await buildTo('production', messages);
     const html = await readFile(path.join(outDir, 'privacy.html'), 'utf8');
