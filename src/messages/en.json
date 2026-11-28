@@ -37,7 +37,7 @@
       },
       "delete": {
         "q": "How do I delete my data?",
-        "a": "In the app, go to Me → Delete all my data. That erases everything Piggybow stored on your phone. Piggybow has no server, so nothing from the app is stored with us. On Android, copies in your phone's own backup are managed in your Google account settings."
+        "a": "In the app, go to Me → Delete all my data. That erases everything Piggybow stored on your phone. Your journal is never stored with us. If you turned on pig tips, it also deletes the random ID, its IP address and the daily count our server keeps for them. On Android, copies in your phone's own backup are managed in your Google account settings."
       },
       "advice": {
         "q": "Does Piggybow give financial advice?",
@@ -74,7 +74,7 @@
       "body": "Your journal doesn't. Piggybow has no account and no server for your money notes.",
       "tipsLabel": "Pig tips, only if you turn them on.",
       "tips": "Piggybow can ask an AI to write your pig's tip of the day. To do that, it sends our server a short summary in numbers: what share of your spending went to each built-in category, how many spends felt worth it, how far along your plan and goal are (in %), what you said makes your pig happy, your language and the day of the week. It never sends your notes, amounts, dates, goal names or anything you typed.",
-      "tipsWho": "Our server runs on Supabase in the USA, and the summary is passed to Anthropic (USA), whose AI writes the tip. Anthropic doesn't use it to train AI models and deletes it within 30 days, unless it's flagged for a safety review or the law requires longer. Our server keeps a random app ID and a count of tips per day, to keep the service fair. If you report a tip, we keep that tip's text and the reason you chose, without your ID, for 90 days to improve our filter. Supabase's logs keep your phone's IP address for up to 7 days, to protect the service from abuse. Turn tips off in Me → Pig tips, or use Delete all my data, and we delete that ID and its count.",
+      "tipsWho": "Our server runs on Supabase in the USA, and the summary is passed to Anthropic (USA), whose AI writes the tip. Anthropic doesn't use it to train AI models and deletes it within 30 days, unless it's flagged for a safety review or the law requires longer. Our server keeps a random app ID, the IP address it last connected from, and a count of tips per day, to keep the service fair. The counts are deleted after 30 days, and the ID with its IP address after 30 days without tips. Supabase's logs also keep the IP address for up to 7 days, to protect the service from abuse. If you report a tip, we keep that tip's text and the reason you chose, without your ID, for 90 days to improve our filter. Turn tips off in Me → Pig tips, or use Delete all my data, and we delete that ID, its IP address and its count as soon as your phone is online.",
       "transfer": "Supabase and Anthropic are in the USA, so pig-tip data is transferred there. These transfers are covered by the European Commission's Standard Contractual Clauses in each provider's data processing terms.",
       "choices": "When you export your data or open a link to our website, you choose where it goes."
     },
