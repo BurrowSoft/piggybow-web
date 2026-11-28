@@ -403,6 +403,16 @@ describe('legal pages', () => {
     ]);
     assert.ok(html.includes(`<a href="mailto:${config.supportEmail}">`), 'the contact section links the support address');
   });
+
+  test('the privacy policy is live: its effective date, and what an email to us gives us', async () => {
+    const { outDir } = await buildTo('production', messages);
+    const html = await readFile(path.join(outDir, 'privacy.html'), 'utf8');
+    assert.match(config.policyVersions.privacy, ISO_DATE);
+    assert.ok(html.includes(`<time datetime="${config.policyVersions.privacy}">`), 'the effective date');
+    assert.ok(html.includes('If you email us, we get your email address and your message and use them only to reply.'));
+    assert.ok(html.includes('are passed on to our mailbox by Forward Email, an email-forwarding service.'));
+    assert.ok(!html.includes('draft-banner'));
+  });
 });
 
 describe('config', () => {
@@ -421,7 +431,7 @@ describe('config', () => {
       Object.fromEntries(Object.entries(config.conditions).map(([id, c]) => [id, c.met])),
       {
         'support-mailbox-live': true,
-        'privacy-text-approved': false,
+        'privacy-text-approved': true,
         'terms-text-approved': false,
         'ios-store-live': false,
         'android-store-live': false,

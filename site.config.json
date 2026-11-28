@@ -27,7 +27,7 @@
     }
   ],
   "policyVersions": {
-    "privacy": "[DRAFT] Effective date, set when the text is approved. It must equal the version the app records."
+    "privacy": "2026-11-28"
   },
   "conditions": {
     "support-mailbox-live": {
@@ -35,7 +35,7 @@
       "what": "The support mailbox shown on /support exists and a test message to it arrives (the owner's mailbox step). Until then /support is a draft: a page with an address that bounces would mislead people."
     },
     "privacy-text-approved": {
-      "met": false,
+      "met": true,
       "what": "The privacy policy's final text is approved by the owner, and every claim in it matches what the app enforces today."
     },
     "terms-text-approved": {
