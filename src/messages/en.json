@@ -63,7 +63,7 @@
       "goals": "your savings goals;",
       "settings": "your settings: currency, what makes your pig happy, your weekly plan, reminder time, app lock and appearance.",
       "onPhone": "All of it is stored on your phone. If you turn on the app lock, your PIN is kept in your phone's secure storage.",
-      "backup": "On Android, if your phone backs up its apps to your Google account, that backup can include Piggybow's entries and settings, but only when the backup is end-to-end encrypted, which needs a screen lock on your phone. Android 8 and older don't back it up at all. The backup belongs to your Google account, and we can't see it. On iPhone, Piggybow keeps your journal out of iCloud Backup. Your app-lock PIN never moves to another phone."
+      "backup": "On Android, if your phone backs up its apps to your Google account, that backup can include Piggybow's entries and settings, but only when the backup is end-to-end encrypted, which needs a screen lock on your phone. Android 8 and older don't back it up at all. The backup belongs to your Google account, and we can't see it. On iPhone, Piggybow keeps your journal out of iCloud Backup; a few app settings, like language and appearance, can be in it. Your app-lock PIN never moves to another phone."
     },
     "leaves": {
       "h": "What leaves your phone",
