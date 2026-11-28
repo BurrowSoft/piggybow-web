@@ -169,14 +169,14 @@ describe('production', async () => {
     }
   });
 
-  test('Help says what happens to an email, and that nothing from the app is stored with us', async () => {
+  test('Help says what happens to an email, and that your journal is never stored with us', async () => {
     const { outDir } = await buildTo('production', messages);
     const html = await readFile(path.join(outDir, 'support.html'), 'utf8');
     const email = config.supportEmail;
     for (const needed of [
       'If you email us, we get your email address and your message and use them only to reply.',
       `Emails to <a href="mailto:${email}">${email}</a> are passed on to our mailbox by Forward Email, an email-forwarding service.`,
-      'Piggybow has no server, so nothing from the app is stored with us.',
+      'Your journal is never stored with us.',
     ]) {
       assert.ok(html.includes(needed), needed);
     }
@@ -402,6 +402,31 @@ describe('legal pages', () => {
       'effective-date',
     ]);
     assert.ok(html.includes(`<a href="mailto:${config.supportEmail}">`), 'the contact section links the support address');
+  });
+
+  // Pig tips (decision 94): each claim as the app and the tips server do it.
+  test('the privacy policy and Help say what pig tips send, to whom, and for how long', async () => {
+    const { outDir } = await buildTo('production', messages);
+    const privacy = await readFile(path.join(outDir, 'privacy.html'), 'utf8');
+    for (const line of [
+      'Your journal doesn&#39;t. Piggybow has no account and no server for your money notes.',
+      '<strong>Pig tips, only if you turn them on.</strong>',
+      'It never sends your notes, amounts, dates, goal names or anything you typed.',
+      'Anthropic doesn&#39;t use it to train AI models and deletes it within 30 days',
+      'for 90 days to improve our filter',
+      'Our server keeps a random app ID, the IP address it last connected from, and a count of tips per day',
+      'The counts are deleted after 30 days, and the ID with its IP address after 30 days without tips.',
+      'Supabase&#39;s logs also keep the IP address for up to 7 days',
+      'Turn tips off in Me → Pig tips, or use Delete all my data, and we delete that ID, its IP address and its count as soon as your phone is online.',
+      'the European Commission&#39;s Standard Contractual Clauses',
+      '<strong>Pig tips</strong> stay off until you say yes',
+    ]) {
+      assert.ok(privacy.includes(line), line);
+    }
+    const support = await readFile(path.join(outDir, 'support.html'), 'utf8');
+    assert.ok(support.includes('What are pig tips, and what do they send?'));
+    assert.ok(support.includes('Never your notes, amounts or anything you typed.'));
+    assert.ok(support.includes('If you turned on pig tips, it also deletes the random ID, its IP address and the daily count our server keeps for them.'));
   });
 
   test('the privacy policy is live: its effective date, and what an email to us gives us', async () => {
