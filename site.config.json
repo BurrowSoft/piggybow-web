@@ -31,7 +31,7 @@
   },
   "conditions": {
     "support-mailbox-live": {
-      "met": false,
+      "met": true,
       "what": "The support mailbox shown on /support exists and a test message to it arrives (the owner's mailbox step). Until then /support is a draft: a page with an address that bounces would mislead people."
     },
     "privacy-text-approved": {
