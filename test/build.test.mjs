@@ -403,6 +403,48 @@ describe('legal pages', () => {
     ]);
     assert.ok(html.includes(`<a href="mailto:${config.supportEmail}">`), 'the contact section links the support address');
   });
+
+  test('the terms have the draft\'s eleven sections, in order, and link the privacy policy', async () => {
+    const { outDir } = await buildTo('preview', messages);
+    const html = await readFile(path.join(outDir, 'terms.html'), 'utf8');
+    const ids = [...html.matchAll(/<section id="([\w-]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(ids, [
+      'what-piggybow-is',
+      'not-financial-advice',
+      'your-journal',
+      'age',
+      'plus',
+      'fair-use',
+      'changes',
+      'no-warranty',
+      'liability',
+      'law',
+      'contact',
+    ]);
+    assert.ok(html.includes('<a href="/privacy">'), 'the journal section links the privacy policy');
+    assert.ok(html.includes(`<a href="mailto:${config.supportEmail}">`), 'the contact section links the support address');
+    // The stores' subscription wording (auto-renewal, cancelling, the trial) is on the page;
+    // the 24 hours are the App Store's rule only.
+    for (const needed of ['renews automatically', 'cancel before it ends (on the App Store, at least 24 hours before)', 'free trial']) {
+      assert.ok(html.includes(needed), needed);
+    }
+    // On iPhone the journal is never in the phone's backup, so the journal section says so.
+    const iphone = "On iPhone, your journal isn't in your phone's backup at all.";
+    assert.ok(html.includes(escapeHtml(iphone)), iphone);
+  });
+
+  test('the terms\' blanks keep them off production until they are filled', async () => {
+    // Even with the gate met, a [DRAFT] blank (the legal name, the country, the law, the date)
+    // stops the build.
+    const termsMet = structuredClone(config);
+    termsMet.conditions['terms-text-approved'].met = true;
+    const outDir = path.join(await mkdtemp(path.join(tmpdir(), 'pb-terms-')), 'dist');
+    temps.push(path.dirname(outDir));
+    await assert.rejects(
+      build({ outDir, mode: 'production', messages, config: termsMet }),
+      /\[DRAFT\] text can't go to production/,
+    );
+  });
 });
 
 describe('config', () => {
