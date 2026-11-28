@@ -72,7 +72,7 @@
       "body": "What you write in Piggybow belongs to you. It stays on your phone. If your phone's own backup is turned on, it may also be in that backup, only when that backup is end-to-end encrypted on Android. We don't receive it. You can export it or delete it at any time in the app.",
       "privacy": "The Privacy Policy explains this in full:",
       "privacyLink": "www.piggybow.com/privacy",
-      "phone": "Because your journal lives on your phone, keeping your phone and its backups safe is up to you. If your phone is lost, reset or replaced without a backup, we can't restore your journal."
+      "phone": "Because your journal lives on your phone, keeping your phone and its backups safe is up to you. If your phone is lost, reset or replaced without a backup, we can't restore your journal. On iPhone, Piggybow isn't in your phone's backup at all."
     },
     "age": {
       "h": "4. Age",

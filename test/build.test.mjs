@@ -394,6 +394,9 @@ describe('legal pages', () => {
     for (const needed of ['renews automatically', 'cancel before it ends (on the App Store, at least 24 hours before)', 'free trial']) {
       assert.ok(html.includes(needed), needed);
     }
+    // On iPhone the journal is never in the phone's backup, so the journal section says so.
+    const iphone = "On iPhone, Piggybow isn't in your phone's backup at all.";
+    assert.ok(html.includes(escapeHtml(iphone)), iphone);
   });
 
   test('the terms\' blanks keep them off production until they are filled', async () => {
