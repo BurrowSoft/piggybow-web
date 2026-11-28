@@ -63,7 +63,7 @@
       "goals": "your savings goals;",
       "settings": "your settings: currency, what makes your pig happy, your weekly plan, reminder time, app lock and appearance.",
       "onPhone": "All of it is stored on your phone. If you turn on the app lock, your PIN is kept in your phone's secure storage.",
-      "backup": "If your phone backs up its apps (Google on Android, iCloud on iPhone), that backup can include Piggybow's entries and settings. The backup belongs to your Google or Apple account, and we can't see it. On Android, Piggybow is only in a cloud backup when that backup is end-to-end encrypted, which needs a screen lock on your phone. Android 8 and older don't back it up at all. Your app-lock PIN isn't included."
+      "backup": "On Android, if your phone backs up its apps to your Google account, that backup can include Piggybow's entries and settings, but only when the backup is end-to-end encrypted, which needs a screen lock on your phone. Android 8 and older don't back it up at all. The backup belongs to your Google account, and we can't see it. On iPhone, Piggybow keeps your journal out of iCloud Backup. Your app-lock PIN is never included."
     },
     "leaves": {
       "h": "What leaves your phone",
@@ -83,7 +83,7 @@
       "exportLabel": "Export:",
       "export": "Me → Export my data saves your journal as a spreadsheet file (CSV) that you can keep anywhere.",
       "deleteLabel": "Delete:",
-      "delete": "Me → Delete all my data erases everything Piggybow stored on your phone. Copies in your phone's own backup are managed in your Google or Apple account settings.",
+      "delete": "Me → Delete all my data erases everything Piggybow stored on your phone. On Android, copies in your phone's own backup are managed in your Google account settings.",
       "offLabel": "Reminders and app lock",
       "off": "stay off until you turn them on, and you can turn them off anytime in Me."
     },
