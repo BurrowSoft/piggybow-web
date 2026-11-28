@@ -395,7 +395,7 @@ describe('legal pages', () => {
       assert.ok(html.includes(needed), needed);
     }
     // On iPhone the journal is never in the phone's backup, so the journal section says so.
-    const iphone = "On iPhone, Piggybow isn't in your phone's backup at all.";
+    const iphone = "On iPhone, your journal isn't in your phone's backup at all.";
     assert.ok(html.includes(escapeHtml(iphone)), iphone);
   });
 
