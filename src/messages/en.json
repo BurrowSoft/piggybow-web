@@ -6,7 +6,7 @@
   "nav": {
     "support": "Support",
     "privacy": "Privacy",
-    "terms": "[DRAFT] Terms"
+    "terms": "Terms"
   },
   "draftBanner": "Draft: not on the live site. This page stays hidden there until its text is approved.",
   "home": {
@@ -55,8 +55,67 @@
     "contact": "[DRAFT] Write to us at {supportEmail}."
   },
   "terms": {
-    "title": "[DRAFT] Terms of use title",
-    "description": "[DRAFT] Terms of use description"
+    "title": "Piggybow Terms of Use",
+    "description": "The terms for using Piggybow, a private money journal, and Piggybow Plus, its subscription.",
+    "updated": "Last updated: [DRAFT] date of approval",
+    "intro": "These terms are an agreement between you and [DRAFT] BurrowSoft's legal name, [DRAFT] country (\"we\", \"us\") about using the Piggybow app. By using Piggybow, you agree to them. If you don't agree, please don't use the app.",
+    "what": {
+      "h": "1. What Piggybow is",
+      "body": "Piggybow is a personal money journal. You write down what you spend and save, and the app keeps those notes on your phone. Piggybow isn't a bank, doesn't move money, and doesn't connect to your bank."
+    },
+    "advice": {
+      "h": "2. Not financial advice",
+      "body": "Piggybow's ideas and tips are everyday saving habits. They aren't financial, tax, legal or investment advice. Decisions about your money are yours."
+    },
+    "yours": {
+      "h": "3. Your journal is yours",
+      "body": "What you write in Piggybow belongs to you. It stays on your phone. If your phone's own backup is turned on, it may also be in that backup, only when that backup is end-to-end encrypted on Android. We don't receive it. You can export it or delete it at any time in the app.",
+      "privacy": "The Privacy Policy explains this in full:",
+      "privacyLink": "www.piggybow.com/privacy",
+      "phone": "Because your journal lives on your phone, keeping your phone and its backups safe is up to you. If your phone is lost, reset or replaced without a backup, we can't restore your journal."
+    },
+    "age": {
+      "h": "4. Age",
+      "body": "Piggybow is meant for adults, aged 18 and over."
+    },
+    "plus": {
+      "h": "5. Piggybow Plus (subscription)",
+      "intro": "Some features are part of Piggybow Plus, a subscription you can buy inside the app.",
+      "prices": "Prices are shown in the app before you buy, in your local currency, as set by Google Play or the App Store.",
+      "payment": "Payment is handled by Google Play or the App Store under their terms. We never see your card details.",
+      "renewLead": "Your subscription renews automatically",
+      "renew": "at the end of each period unless you cancel at least 24 hours before it ends. You can cancel anytime in your Google Play or App Store subscription settings.",
+      "notCancelBefore": "Uninstalling the app or deleting your data does",
+      "notCancelWord": "not",
+      "notCancelAfter": "cancel it.",
+      "trial": "If a free trial is offered, it turns into a paid subscription at the end of the trial unless you cancel before then.",
+      "refunds": "Refunds are handled by Google Play or the App Store under their refund policies.",
+      "ends": "If your subscription ends, you keep everything you've written. Plus-only features stop until you subscribe again."
+    },
+    "fair": {
+      "h": "6. Using the app fairly",
+      "body": "Please don't try to break, reverse-engineer or misuse the app, or use it to break the law."
+    },
+    "changes": {
+      "h": "7. Changes to the app and these terms",
+      "body": "We may update Piggybow and these terms. If we make a change that matters, we'll say so in the app or on this page before it takes effect. If you keep using Piggybow after that, the new terms apply."
+    },
+    "warranty": {
+      "h": "8. No warranty",
+      "body": "We work hard to make Piggybow reliable, but it's provided \"as is\". We can't promise it will always be free of errors or available."
+    },
+    "liability": {
+      "h": "9. Limits on our liability",
+      "body": "As far as the law allows, we aren't responsible for indirect losses, or for losses caused by lost data, money decisions, or events outside our control. Nothing in these terms limits rights you have under consumer law that can't be limited."
+    },
+    "law": {
+      "h": "10. Law",
+      "body": "These terms are governed by the laws of [DRAFT] country / jurisdiction, without taking away any protection your local consumer law gives you."
+    },
+    "contact": {
+      "h": "11. Contact",
+      "body": "Questions about these terms: {supportEmail}."
+    }
   },
   "notFound": {
     "title": "Page not found · Piggybow",
