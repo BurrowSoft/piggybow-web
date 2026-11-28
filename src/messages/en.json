@@ -84,7 +84,7 @@
       "prices": "Prices are shown in the app before you buy, in your local currency, as set by Google Play or the App Store.",
       "payment": "Payment is handled by Google Play or the App Store under their terms. We never see your card details.",
       "renewLead": "Your subscription renews automatically",
-      "renew": "at the end of each period unless you cancel at least 24 hours before it ends. You can cancel anytime in your Google Play or App Store subscription settings.",
+      "renew": "at the end of each period unless you cancel before it ends (on the App Store, at least 24 hours before). You can cancel anytime in your Google Play or App Store subscription settings.",
       "notCancelBefore": "Uninstalling the app or deleting your data does",
       "notCancelWord": "not",
       "notCancelAfter": "cancel it.",

@@ -389,8 +389,9 @@ describe('legal pages', () => {
     ]);
     assert.ok(html.includes('<a href="/privacy">'), 'the journal section links the privacy policy');
     assert.ok(html.includes(`<a href="mailto:${config.supportEmail}">`), 'the contact section links the support address');
-    // The stores' subscription wording (auto-renewal, cancelling, the trial) is on the page.
-    for (const needed of ['renews automatically', 'at least 24 hours before it ends', 'free trial']) {
+    // The stores' subscription wording (auto-renewal, cancelling, the trial) is on the page;
+    // the 24 hours are the App Store's rule only.
+    for (const needed of ['renews automatically', 'cancel before it ends (on the App Store, at least 24 hours before)', 'free trial']) {
       assert.ok(html.includes(needed), needed);
     }
   });
