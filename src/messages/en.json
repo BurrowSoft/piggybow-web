@@ -29,15 +29,15 @@
     "faq": {
       "stored": {
         "q": "Where are my entries stored?",
-        "a": "On your phone, and in your phone's own backup (Google or iCloud) if you've turned it on; on Android, only when that backup is end-to-end encrypted. Piggybow has no account and no server for your money notes."
+        "a": "On your phone, and in your phone's own backup (Google) if you've turned it on; on Android, only when that backup is end-to-end encrypted. On iPhone, Piggybow isn't in your iCloud backup. Piggybow has no account and no server for your money notes."
       },
       "newPhone": {
         "q": "Can I move to a new phone?",
-        "a": "Yes, to a new phone of the same kind (Android to Android, iPhone to iPhone), if your phone backs up your apps: restore that backup on the new phone. On Android, Piggybow is only in a cloud backup when your phone has a screen lock, so the backup is encrypted. Android 8 and older don't back it up at all. App lock turns off after a restore, so turn it on again in Me. Moving between Android and iPhone isn't possible yet. You can always keep a copy: Me → Export my data gives you a spreadsheet file (CSV) to save or send."
+        "a": "On Android, yes: to a new Android phone, if your phone backs up your apps, restore that backup on the new phone. Piggybow is only in a cloud backup when your phone has a screen lock, so the backup is encrypted. Android 8 and older don't back it up at all. App lock turns off after a restore, so turn it on again in Me. On iPhone, Piggybow isn't in your iCloud backup, so your journal can't move to a new iPhone yet. Moving between Android and iPhone isn't possible yet. You can always keep a copy: Me → Export my data gives you a spreadsheet file (CSV) to save or send."
       },
       "delete": {
         "q": "How do I delete my data?",
-        "a": "In the app, go to Me → Delete all my data. That erases everything Piggybow stored on your phone. Piggybow has no server, so nothing is stored with us. Copies in your phone's own backup are managed in your Google or Apple account settings."
+        "a": "In the app, go to Me → Delete all my data. That erases everything Piggybow stored on your phone. Piggybow has no server, so nothing is stored with us. On Android, copies in your phone's own backup are managed in your Google account settings."
       },
       "advice": {
         "q": "Does Piggybow give financial advice?",
