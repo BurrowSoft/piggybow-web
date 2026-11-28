@@ -152,13 +152,33 @@ describe('production', async () => {
     const { outDir: real, result } = await buildTo('production', messages);
     const live = config.pages.filter((p) => !p.gate || config.conditions[p.gate].met === true).map((p) => p.slug);
     assert.deepEqual(result.pages.map((p) => p.slug), live);
-    // A live page never links one that is still gated off (it would 404).
+    // A live page never links one that is still gated off (it would 404):
+    // /x, /x/, /x.html, /x#part, /x?q and the site's own absolute URLs alike.
+    // Files (/styles.css, /badges/….svg) aren't pages.
     const built = new Set(result.pages.map((p) => `/${p.slug}`));
     for (const { file, html } of await htmlFiles(real)) {
       assert.ok(!html.includes('[DRAFT]'), file);
-      for (const [, href] of html.matchAll(/href="(\/[\w-]*)"/g)) {
-        assert.ok(built.has(href), `${file} links ${href}, which isn't built`);
+      for (const [, raw] of html.matchAll(/href="([^"]*)"/g)) {
+        const local = raw.startsWith(config.siteUrl) ? raw.slice(config.siteUrl.length) || '/' : raw;
+        if (!local.startsWith('/') || local.startsWith('//')) continue;
+        const where = local.split(/[?#]/)[0];
+        if (/\.(?!html$)[a-z0-9]+$/i.test(where)) continue;
+        const page = where.replace(/\.html$/, '').replace(/(.)\/$/, '$1');
+        assert.ok(built.has(page), `${file} links ${raw}, which isn't built`);
       }
+    }
+  });
+
+  test('Help says what happens to an email, and that nothing from the app is stored with us', async () => {
+    const { outDir } = await buildTo('production', messages);
+    const html = await readFile(path.join(outDir, 'support.html'), 'utf8');
+    const email = config.supportEmail;
+    for (const needed of [
+      'If you email us, we get your email address and your message and use them only to reply.',
+      `Emails to <a href="mailto:${email}">${email}</a> are passed on to our mailbox by Forward Email, an email-forwarding service.`,
+      'Piggybow has no server, so nothing from the app is stored with us.',
+    ]) {
+      assert.ok(html.includes(needed), needed);
     }
   });
 });
@@ -263,7 +283,14 @@ describe('copy', () => {
     const { outDir } = await buildTo('preview', messages);
     const html = await readFile(path.join(outDir, 'support.html'), 'utf8');
     const email = config.supportEmail;
-    assert.ok(html.includes(`<p class="lead">Write to us at <a href="mailto:${email}">${email}</a>. We read every message.</p>`));
+    const link = `<a href="mailto:${email}">${email}</a>`;
+    assert.ok(
+      html.includes(
+        `<p class="lead">Write to us at ${link}. We read every message. If you email us, we get your email address and ` +
+          `your message and use them only to reply. Emails to ${link} are passed on to our mailbox by Forward Email, ` +
+          'an email-forwarding service.</p>',
+      ),
+    );
     assert.ok(html.includes(`<meta name="description" content="Write to us at ${email}. We read every message.">`));
   });
 
